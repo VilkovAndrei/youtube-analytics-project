@@ -39,45 +39,27 @@ class Channel:
 
     def __gt__(self, other):
         """ Возвращает True или False """
-        if self.subscribers_count > other.subscribers_count:
-            return True
-        else:
-            return False
+        return self.subscribers_count > other.subscribers_count
 
     def __ge__(self, other):
         """ Возвращает True или False """
-        if self.subscribers_count >= other.subscribers_count:
-            return True
-        else:
-            return False
+        return self.subscribers_count >= other.subscribers_count
 
     def __eq__(self, other):
         """ Возвращает True или False """
-        if self.subscribers_count == other.subscribers_count:
-            return True
-        else:
-            return False
+        return self.subscribers_count == other.subscribers_count
 
     def __ne__(self, other):
         """ Возвращает True или False """
-        if self.subscribers_count != other.subscribers_count:
-            return True
-        else:
-            return False
+        return self.subscribers_count != other.subscribers_count
 
     def __lt__(self, other):
         """ Возвращает True или False """
-        if self.subscribers_count < other.subscribers_count:
-            return True
-        else:
-            return False
+        return self.subscribers_count < other.subscribers_count
 
     def __le__(self, other):
         """ Возвращает True или False """
-        if self.subscribers_count <= other.subscribers_count:
-            return True
-        else:
-            return False
+        return self.subscribers_count <= other.subscribers_count
 
     def print_info(self) -> None:
         """Выводит в консоль информацию о канале."""
