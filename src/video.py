@@ -1,13 +1,9 @@
-import os
 import json
 
-from googleapiclient.discovery import build
-
-api_key: str = os.getenv('YOUTUBE_API_KEY')
-youtube = build('youtube', 'v3', developerKey=api_key)
+from src.youtube_service import YoutubeService
 
 
-class Video:
+class Video(YoutubeService):
     """Класс для ютуб-видео"""
 
     @property
@@ -18,8 +14,8 @@ class Video:
         """Экземпляр инициализируется id видео. Дальше все данные будут подтягиваться по API."""
         self.__video_id = str_video_id
 
-        video_dict = youtube.videos().list(part='snippet,statistics,contentDetails,topicDetails',
-                                           id=self.video_id).execute()
+        video_dict = Video.get_service().videos().list(part='snippet,statistics,contentDetails,topicDetails',
+                                                       id=self.video_id).execute()
         self.video_title: str = video_dict['items'][0]['snippet']['title']
         self.view_count: int = int(video_dict['items'][0]['statistics']['viewCount'])
         self.like_count: int = int(video_dict['items'][0]['statistics']['likeCount'])
@@ -30,8 +26,8 @@ class Video:
 
     def print_info(self) -> None:
         """Выводит в консоль информацию о видео."""
-        video_dict = youtube.videos().list(part='snippet,statistics,contentDetails,topicDetails',
-                                           id=self.video_id).execute()
+        video_dict = Video.get_service().videos().list(part='snippet,statistics,contentDetails,topicDetails',
+                                                       id=self.video_id).execute()
         print(json.dumps(video_dict, indent=2, ensure_ascii=False))
 
     def to_json(self, filename):
