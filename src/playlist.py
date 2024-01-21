@@ -1,15 +1,10 @@
-import os
 import json
 import datetime
 from isodate import parse_duration
-
-from googleapiclient.discovery import build
-
-api_key: str = os.getenv('YOUTUBE_API_KEY')
-youtube = build('youtube', 'v3', developerKey=api_key)
+from src.youtube_service import YoutubeService
 
 
-class PlayList:
+class PlayList(YoutubeService):
     """Класс для ютуб-плей-листа"""
 
     @property
@@ -20,7 +15,7 @@ class PlayList:
         """Экземпляр инициализируется id плей-листа. Дальше все данные будут подтягиваться по API."""
         self.__pl_id = str_pl_id
 
-        pl_dict = youtube.playlists().list(id=self.pl_id, part='snippet').execute()
+        pl_dict = PlayList.get_service().playlists().list(id=self.pl_id, part='snippet').execute()
         self.title: str = pl_dict['items'][0]['snippet']['title']
         self.url = f"https://www.youtube.com/playlist?list={self.pl_id}"
 
@@ -29,7 +24,7 @@ class PlayList:
 
     def print_info(self) -> None:
         """Выводит в консоль информацию о видео."""
-        pl_dict = youtube.playlists().list(id=self.pl_id, part='snippet').execute()
+        pl_dict = PlayList.get_service().playlists().list(id=self.pl_id, part='snippet').execute()
         print(json.dumps(pl_dict, indent=2, ensure_ascii=False))
 
     def to_json(self, filename):
@@ -41,14 +36,12 @@ class PlayList:
 
     @property
     def total_duration(self) -> datetime.timedelta:
-        playlist_videos = youtube.playlistItems().list(playlistId=self.pl_id,
-                                                       part='contentDetails',
-                                                       maxResults=50,
-                                                       ).execute()
+        playlist_videos = PlayList.get_service().playlistItems().list(playlistId=self.pl_id,
+                                                                      part='contentDetails',
+                                                                      maxResults=50,).execute()
         video_ids: list[str] = [video['contentDetails']['videoId'] for video in playlist_videos['items']]
-        video_response = youtube.videos().list(part='contentDetails,statistics',
-                                               id=','.join(video_ids)
-                                               ).execute()
+        video_response = PlayList.get_service().videos().list(part='contentDetails,statistics',
+                                                              id=','.join(video_ids)).execute()
         total_time = datetime.timedelta()
         for video in video_response['items']:
             # YouTube video duration is in ISO 8601 format
@@ -58,29 +51,17 @@ class PlayList:
         return total_time
 
     def show_best_video(self):
-        playlist_videos = youtube.playlistItems().list(playlistId=self.pl_id,
-                                                       part='contentDetails',
-                                                       maxResults=50,
-                                                       ).execute()
+        playlist_videos = PlayList.get_service().playlistItems().list(playlistId=self.pl_id,
+                                                                      part='contentDetails',
+                                                                      maxResults=50,).execute()
         video_ids: list[str] = [video['contentDetails']['videoId'] for video in playlist_videos['items']]
         max_like_count = 0
         current_video_id = ''
         for video_id in video_ids:
-            video_response = youtube.videos().list(part='snippet,statistics,contentDetails,topicDetails',
-                                                   id=video_id
-                                                   ).execute()
+            video_response = PlayList.get_service().videos().list(part='snippet,statistics,contentDetails,topicDetails',
+                                                                  id=video_id).execute()
             like_count: int = int(video_response['items'][0]['statistics']['likeCount'])
             if like_count > max_like_count:
                 max_like_count = like_count
                 current_video_id = video_id
         return f"https://youtu.be/{current_video_id}"
-
-
-# pl = PlayList('PLv_zOGKKxVpj-n2qLkEM2Hj96LO6uqgQw')
-# assert pl.title == "Moscow Python Meetup №81"
-# assert pl.url == "https://www.youtube.com/playlist?list=PLv_zOGKKxVpj-n2qLkEM2Hj96LO6uqgQw"
-# duration1 = pl.total_duration
-# assert str(duration1) == "1:49:52"
-# assert isinstance(duration1, datetime.timedelta)
-# assert duration1.total_seconds() == 6592.0
-# assert pl.show_best_video() == "https://youtu.be/cUGyMzWQcGM"

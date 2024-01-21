@@ -1,13 +1,9 @@
 import json
-import os
 
-from googleapiclient.discovery import build
-
-api_key: str = os.getenv('YOUTUBE_API_KEY')
-youtube = build('youtube', 'v3', developerKey=api_key)
+from src.youtube_service import YoutubeService
 
 
-class Channel:
+class Channel(YoutubeService):
     """Класс для ютуб-канала"""
 
     @property
@@ -63,12 +59,8 @@ class Channel:
 
     def print_info(self) -> None:
         """Выводит в консоль информацию о канале."""
-        channel = youtube.channels().list(id=self.channel_id, part='snippet,statistics').execute()
+        channel = Channel.get_service().channels().list(id=self.channel_id, part='snippet,statistics').execute()
         print(json.dumps(channel, indent=2, ensure_ascii=False))
-
-    @classmethod
-    def get_service(cls):
-        return build('youtube', 'v3', developerKey=api_key)
 
     def to_json(self, filename):
         channel_info = {"title": self.title,
