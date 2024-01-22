@@ -13,16 +13,24 @@ class Video(YoutubeService):
     def __init__(self, str_video_id: str):
         """Экземпляр инициализируется id видео. Дальше все данные будут подтягиваться по API."""
         self.__video_id = str_video_id
-
-        video_dict = Video.get_service().videos().list(part='snippet,statistics,contentDetails,topicDetails',
-                                                       id=self.video_id).execute()
-        self.video_title: str = video_dict['items'][0]['snippet']['title']
-        self.view_count: int = int(video_dict['items'][0]['statistics']['viewCount'])
-        self.like_count: int = int(video_dict['items'][0]['statistics']['likeCount'])
-        self.video_url = f"https://www.youtube.com/watch?v={self.video_id}"
+        try:
+            video_dict = Video.get_service().videos().list(part='snippet,statistics,contentDetails,topicDetails',
+                                                           id=self.video_id).execute()
+            if not video_dict:
+                raise IndexError(f"video_id: {str_video_id} не найден")
+            else:
+                self.title: str = video_dict['items'][0]['snippet']['title']
+                self.view_count: int = int(video_dict['items'][0]['statistics']['viewCount'])
+                self.like_count: int = int(video_dict['items'][0]['statistics']['likeCount'])
+                self.video_url = f"https://www.youtube.com/watch?v={self.video_id}"
+        except IndexError:
+            self.title = None
+            self.view_count = None
+            self.like_count = None
+            self.video_url = None
 
     def __str__(self):
-        return f"{self.video_title}"
+        return f"{self.title}"
 
     def print_info(self) -> None:
         """Выводит в консоль информацию о видео."""
@@ -31,7 +39,7 @@ class Video(YoutubeService):
         print(json.dumps(video_dict, indent=2, ensure_ascii=False))
 
     def to_json(self, filename):
-        video_info = {"video_title": self.video_title,
+        video_info = {"video_title": self.title,
                       "video_id": self.video_id,
                       "video_url": self.video_url,
                       "view_count": self.view_count,
@@ -48,7 +56,7 @@ class PLVideo(Video):
         self.playlist_id = str_playlist_id
 
     def to_json(self, filename):
-        video_info = {"video_title": self.video_title,
+        video_info = {"video_title": self.title,
                       "video_id": self.video_id,
                       "video_url": self.video_url,
                       "view_count": self.view_count,
